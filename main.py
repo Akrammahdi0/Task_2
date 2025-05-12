@@ -46,58 +46,62 @@ def get_user_preferences():
         return []
 
 
-user_preferences = get_user_preferences()
-print("User preferences:", user_preferences)
+def main():
+    user_preferences = get_user_preferences()
+    print("User preferences:", user_preferences)
 
-print("\nSelected Categories and Available Items:")
-for category in user_preferences:
-    items = categories.get(category, [])
-    if items:
-        print(f"  {category}: {items}")
+    print("\nSelected Categories and Available Items:")
+    for category in user_preferences:
+        items = categories.get(category, [])
+        if items:
+            print(f"  {category}: {items}")
+        else:
+            print(f"  {category}: No available items")
+
+    if not user_preferences:
+        print("No preferences selected. Exiting.")
     else:
-        print(f"  {category}: No available items")
+        dice_roll = random.randint(1, 6)
+        print(f"Dice roll: {dice_roll}")
 
-if not user_preferences:
-    print("No preferences selected. Exiting.")
-else:
-    dice_roll = random.randint(1, 6)
-    print(f"Dice roll: {dice_roll}")
+        filtered_items = {
+            category: items for category, items in categories.items()
+            if category in user_preferences and items
+        }
 
-    filtered_items = {
-        category: items for category, items in categories.items()
-        if category in user_preferences and items
-    }
+        if not filtered_items:
+            print("No items available in selected categories.")
+        else:
+            total_preferences = len(filtered_items)
+            ratio = math.ceil(dice_roll / total_preferences)
+            print(f"Initial items per category (rounded up): {ratio}")
+            recommended_items = []
+            remaining_slots = dice_roll
 
-    if not filtered_items:
-        print("No items available in selected categories.")
-    else:
-        total_preferences = len(filtered_items)
-        ratio = math.ceil(dice_roll / total_preferences)
-        print(f"Initial items per category (rounded up): {ratio}")
-        recommended_items = []
-        remaining_slots = dice_roll
+            for category, items in filtered_items.items():
+                if remaining_slots == 0:
+                    break
+                count = min(ratio, len(items), remaining_slots)
+                chosen = random.sample(items, count)
+                print(f"From {category}, selected: {chosen}")
+                recommended_items.extend(chosen)
+                remaining_slots -= count
 
-        for category, items in filtered_items.items():
-            if remaining_slots == 0:
-                break
-            count = min(ratio, len(items), remaining_slots)
-            chosen = random.sample(items, count)
-            print(f"From {category}, selected: {chosen}")
-            recommended_items.extend(chosen)
-            remaining_slots -= count
+            if len(recommended_items) < dice_roll:
+                remaining = dice_roll - len(recommended_items)
+                print(f"Need {remaining} more items. Trying to fill from all"
+                      "remaining items.")
 
-        if len(recommended_items) < dice_roll:
-            remaining = dice_roll - len(recommended_items)
-            print(f"Need {remaining} more items. Trying to fill from all "
-                  "remaining items.")
+                all_available = [
+                    item for cat_items in categories.values()
+                    for item in cat_items if item not in recommended_items
+                ]
+                extra = random.sample(
+                    all_available, min(remaining, len(all_available)))
+                recommended_items.extend(extra)
 
-            all_available = [
-                item for cat_items in categories.values()
-                for item in cat_items if item not in recommended_items
-            ]
-            extra = random.sample(
-                all_available, min(remaining, len(all_available)))
-            recommended_items.extend(extra)
+            print("\nFinal Recommendations:")
+            print(recommended_items)
 
-        print("\nFinal Recommendations:")
-        print(recommended_items)
+
+main()
